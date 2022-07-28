@@ -20,6 +20,9 @@ const userSchema = new Schema({
   count: Number,
   log: [exerciseSchema],
 });
+userSchema.set('toJSON', {transform(doc, ret) { delete ret.__v;}});
+exerciseSchema.set('toJSON', {transform(doc, ret) { delete ret._id;}});
+
 
 const User = mongoose.model('User', userSchema);
 //
@@ -70,13 +73,14 @@ app.post('/api/users/:_id/exercises', (req, res, next) => {
     user.save((err, data)=>{
       if(err)
         next(err);
-      //delete data["__v"];
-      //for(let x of data.log)
-       // delete x["__v"];
-      
-      
-      res.json(data);
-    })
+      res.json({
+        username: data.username,
+        description: req.body.description,
+        duration: Number(req.body.duration),
+        date: date.toDateString(),
+        _id: data._id,
+      });
+    });
   })  
 });
 

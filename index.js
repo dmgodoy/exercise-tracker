@@ -54,13 +54,13 @@ app.post('/api/users/:_id/exercises', (req, res, next) => {
     err.status = 400;
     next(err);
   }
-  let date = Date.now();
+  let date = new Date(Date.now());
   console.log(req.body.date);
   if(req.body.date)
     date = new Date(req.body.date);
   console.log(date);
-  if(date == 'Invalid Date')
-    date = Date.now();
+  if(!date instanceof Date)
+    date = new Date(Date.now());
   console.log(date);
   User.findById(req.params._id).exec((err, user) => {
     if(err)
@@ -70,13 +70,26 @@ app.post('/api/users/:_id/exercises', (req, res, next) => {
     user.save((err, data)=>{
       if(err)
         next(err);
+      //delete data["__v"];
+      //for(let x of data.log)
+       // delete x["__v"];
+      
+      
       res.json(data);
     })
   })  
 });
 
 app.get('/api/users/:_id/logs', (req, res, next) => {
-  User.findById(req.params._id).select('-__v').exec((err, user) => {
+  let slice = {};
+  console.log(req.query.limit);
+  console.log(typeof req.query.limit);
+  console.log(typeof req.query.limit === 'number');
+  if(req.query.limit && typeof Number(req.query.limit) === 'number')
+    slice = { log: { $slice: [0, Number(req.query.limit)] } };
+  console.log(slice);
+  let query = User.findById(req.params._id, slice).select('-__v');
+  query.exec((err, user) => {
     if(err)
       next(err);
     res.json(user);
